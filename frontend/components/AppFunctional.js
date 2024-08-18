@@ -99,6 +99,17 @@ function useAppState() {
                   steps: currentAppState.steps + 1,
                 };
           break;
+        case "move_down":
+          newAppState =
+            currentAppState.positionY === 3
+              ? { message: "You can't go down" }
+              : {
+                  message: "",
+                  position: currentAppState.position + 3,
+                  positionY: currentAppState.positionY + 1,
+                  steps: currentAppState.steps + 1,
+                };
+          break;
       }
 
       return {
