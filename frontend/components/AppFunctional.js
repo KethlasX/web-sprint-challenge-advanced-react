@@ -1,4 +1,7 @@
 import React, { useReducer } from "react";
+import axios from "axios";
+
+const apiUrl = "http://localhost:9000/api/result";
 
 export default function AppFunctional(props) {
   const { appState, dispatch, onSubmit } = useAppState();
@@ -110,6 +113,9 @@ function useAppState() {
                   steps: currentAppState.steps + 1,
                 };
           break;
+        case "set_message":
+          newAppState = { message: action.message ?? "" };
+          break;
       }
 
       return {
@@ -122,6 +128,20 @@ function useAppState() {
 
   const onSubmit = (e) => {
     e.preventDefault();
+    axios
+      .post(apiUrl, {
+        x: appState.positionX,
+        y: appState.positionY,
+        steps: appState.steps,
+        email: e.target[0].value,
+      })
+      .catch((e) => e?.response)
+      .then((response) =>
+        dispatch({
+          type: "set_message",
+          message: response?.data?.message ?? "",
+        })
+      );
   };
 
   return {
