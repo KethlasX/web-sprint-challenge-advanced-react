@@ -77,6 +77,17 @@ function useAppState() {
                   steps: currentAppState.steps + 1,
                 };
           break;
+        case "move_right":
+          newAppState =
+            currentAppState.positionX === 3
+              ? { message: "You can't go right" }
+              : {
+                  message: "",
+                  position: currentAppState.position + 1,
+                  positionX: currentAppState.positionX + 1,
+                  steps: currentAppState.steps + 1,
+                };
+          break;
       }
 
       return {
