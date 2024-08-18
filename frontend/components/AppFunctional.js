@@ -66,6 +66,17 @@ function useAppState() {
         case "reset":
           newAppState = { ...initAppState };
           break;
+        case "move_left":
+          newAppState =
+            currentAppState.positionX === 1
+              ? { message: "You can't go left" }
+              : {
+                  message: "",
+                  position: currentAppState.position - 1,
+                  positionX: currentAppState.positionX - 1,
+                  steps: currentAppState.steps + 1,
+                };
+          break;
       }
 
       return {
