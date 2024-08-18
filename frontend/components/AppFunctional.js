@@ -63,6 +63,9 @@ function useAppState() {
       let newAppState = null;
 
       switch (action.type) {
+        case "reset":
+          newAppState = { ...initAppState };
+          break;
       }
 
       return {
