@@ -1,152 +1,153 @@
-import React, { useState } from 'react'
-import axios from 'axios'
+import React, { useState } from "react";
+import axios from "axios";
 
-// Suggested initial states
-const initialEmail = ''
-const initialSteps = 0
-const initialIndex = 4 // the index the "B" is at
-const initialMessage = ''
-const initialErrorMessage = ''
+const apiUrl = "http://localhost:9000/api/result";
+const initialPageState = {
+  email: "",
+  steps: 0,
+  x: 2,
+  y: 2,
+  message: "",
+};
 
 export default function AppFunctional(props) {
-  const [index, setIndex] = useState(initialIndex)
-  const [steps, setSteps] = useState(initialSteps)
-  const [email, setEmail] = useState(initialEmail)
-  const [message, setMessage] = useState(initialMessage)
-  const [errorMessage, setErrorMessage] = useState(initialErrorMessage)
+  const [pageState, setPageState] = useState({ ...initialPageState });
+  const { email, steps, x, y, message } = pageState;
+  const index = getIndex(x, y);
 
-  // THE FOLLOWING HELPERS ARE JUST RECOMMENDATIONS.
-  // You can delete them and build your own logic from scratch.
-
-
-function getXY() {
-  // It it not necessary to have a state to track the coordinates.
-  // It's enough to know what index the "B" is at, to be able to calculate them.
-  let coordinates = [
-    '1,1',
-    '1,2',
-    '1,3',
-    '2,1',
-    '2,2',
-    '2,3',
-    '3,1',
-    '3,2',
-    '3,3',
-  ]
-  let xy = coordinates[index]
-  return xy
-}
-
-function reset() {
-  // Use this helper to reset all states to their initial values.
-  setIndex(initialIndex)
-  setSteps(initialSteps)
-  setErrorMessage(initialErrorMessage)
-
-}
-console.log(index)
-
-function getNextIndex(direction) {
-  // This helper takes a direction ("left", "up", etc) and calculates what the next index
-  // of the "B" would be. If the move is impossible because we are at the edge of the grid,
-  // this helper should return the current index unchanged.
-  let newIndex = index;
-  if (direction === 'right') {
-    if (newIndex === 2 || newIndex === 5 || newIndex === 8) {
-      return newIndex;
-    }
-    newIndex += 1;
-  }
-  if (direction === 'left') {
-    if (newIndex === 0 || newIndex === 3 || newIndex === 6) {
-      return newIndex;
-    }
-    newIndex -= 1;
-  }
-  if (direction === 'up') {
-    if (newIndex === 0 || newIndex === 1 || newIndex === 2) {
-      return newIndex;
-    }
-    newIndex -= 3;
-  }
-  if (direction === 'down') {
-    if (newIndex === 6 || newIndex === 7 || newIndex === 8) {
-      return newIndex;
-    }
-    newIndex += 3;
-  }
-
-  let newSteps = steps;
-  newSteps++
-  setSteps(newSteps)
-  return newIndex
-}
-
-function move(evt) {
-  // This event handler can use the helper above to obtain a new index for the "B",
-  // and change any states accordingly.
-  const nextIndex = getNextIndex(evt.target.id)
-  setIndex(nextIndex)
-  if (index < 0) {
-    setErrorMessage("You can't go left")
-  } else if (index > 8) {
-    setErrorMessage("You can't go right")
-  }
-}
-
-function onChange(evt) {
-  // You will need this to update the value of the input.
-  setEmail(evt.target.value)
-}
-
-function onSubmit(evt) {
-  // Use a POST request to send a payload to the server.
-  const xySplit = getXY().split('');
-  evt.preventDefault()
-  let payload = {
-    email : (email),
-    steps : (steps),
-    x : (xySplit[0]),
-    y : (xySplit[2]),
-  }
-
-  axios.post('http://localhost:9000/api/result', payload)
-  .then ((res) => {
-    setErrorMessage(res.data.message)
-  }) .catch ((err) => {
-    setErrorMessage(err.response.data.message)
-  })
-}
-
-return (
-  <div id="wrapper" className={props.className}>
-    <div className="info">
-      <h3 id="coordinates">Coordinates ({getXY(index)})</h3>
-      <h3 id="steps">You moved {steps} times</h3>
-    </div>
-    <div id="grid">
-      {
-        [0, 1, 2, 3, 4, 5, 6, 7, 8].map(idx => (
-          <div key={idx} className={`square${idx === index ? ' active' : ''}`}>
-            {idx === index ? 'B' : null}
+  return (
+    <div id="wrapper" className={props.className}>
+      <div className="info">
+        <h3 id="coordinates">
+          Coordinates ({x}, {y})
+        </h3>
+        <h3 id="steps">
+          You moved {steps} time{steps !== 1 ? "s" : ""}
+        </h3>
+      </div>
+      <div id="grid">
+        {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((idx) => (
+          <div key={idx} className={`square${idx === index ? " active" : ""}`}>
+            {idx === index ? "B" : null}
           </div>
-        ))
-      }
+        ))}
+      </div>
+      <div className="info">
+        <h3 id="message">{message}</h3>
+      </div>
+      <div id="keypad">
+        {["left", "up", "right", "down"].map((id) => (
+          <button key={id} id={id} onClick={move(pageState, setPageState)}>
+            {id.toUpperCase()}
+          </button>
+        ))}
+        <button id="reset" onClick={reset(setPageState)}>
+          reset
+        </button>
+      </div>
+      <form onSubmit={onSubmit(pageState, setPageState)}>
+        <input
+          onChange={onChange(setPageState)}
+          id="email"
+          type="email"
+          placeholder="type email"
+          value={email}
+        ></input>
+        <input id="submit" type="submit"></input>
+      </form>
     </div>
-    <div className="info">
-      <h3 id="message">{errorMessage}</h3>
-    </div>
-    <div id="keypad">
-      <button onClick={move} id="left">LEFT</button>
-      <button onClick={move} id="up">UP</button>
-      <button onClick={move} id="right">RIGHT</button>
-      <button onClick={move} id="down">DOWN</button>
-      <button onClick={reset} id="reset">reset</button>
-    </div>
-    <form onSubmit={onSubmit}>
-      <input onChange={onChange} id="email" type="email" placeholder="type email"></input>
-      <input id="submit" type="submit"></input>
-    </form>
-  </div>
-)
+  );
+}
+
+// Use this helper to reset all states to their initial values.
+function reset(setPageState) {
+  return () => {
+    setPageState({ ...initialPageState });
+  };
+}
+
+/**
+ * This event handler can use the helper above to obtain a new index for the "B", and change any states accordingly.
+ */
+function move({ x, y }, setPageState) {
+  return (evt) => {
+    const [nextX, nextY] = getNextXY(evt.target.id, x, y);
+    if (nextX === x && nextY === y) {
+      setPageState((prev) => ({
+        ...prev,
+        message: `You can't go ${evt.target.id}`,
+      }));
+    } else {
+      setPageState((prev) => ({
+        email: prev.email,
+        steps: prev.steps + 1,
+        x: nextX,
+        y: nextY,
+        message: "",
+      }));
+    }
+  };
+}
+
+/**
+ * You will need this to update the value of the input.
+ */
+function onChange(setPageState) {
+  return (evt) => {
+    setPageState((prev) => ({
+      ...prev,
+      email: evt.target.value,
+    }));
+  };
+}
+
+/**
+ * Use a POST request to send a payload to the server.
+ */
+function onSubmit(pageState, setPageState) {
+  return (evt) => {
+    evt.preventDefault();
+    axios
+      .post(apiUrl, pageState)
+      .catch((err) => err.response)
+      .then((res) => {
+        setPageState((prev) => ({
+          ...prev,
+          email: "",
+          message: res.data.message,
+        }));
+      });
+  };
+}
+
+/**
+ * Calculate index based on xy coordinates.
+ */
+function getIndex(x, y) {
+  return 3 * (y - 1) + (x - 1);
+}
+
+/**
+ * This helper takes a direction ("left", "up", etc) and calculates what the next coordinates of the "B" would be. If
+ * the move is impossible because we are at the edge of the grid, this helper should return the current coordinates
+ * unchanged.
+ */
+function getNextXY(direction, x, y) {
+  let nextX = x;
+  let nextY = y;
+
+  if (direction === "right" && x < 3) {
+    nextX += 1;
+  }
+  if (direction === "left" && x > 1) {
+    nextX -= 1;
+  }
+  if (direction === "up" && y > 1) {
+    nextY -= 1;
+  }
+  if (direction === "down" && y < 3) {
+    nextY += 1;
+  }
+
+  return [nextX, nextY];
 }
